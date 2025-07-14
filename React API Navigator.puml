@@ -1,0 +1,88 @@
+@startuml
+!theme mars
+
+title React REST Navigator: Component Diagram
+
+skinparam component {
+  backgroundColor<<ReactComponent>> lightblue
+  backgroundColor<<CustomHook>> lightgreen
+  backgroundColor<<ExternalAPI>> lightgrey
+  borderColor black
+  shadowing true
+  roundcorner 5
+}
+
+package "React Frontend Application" {
+
+  component [App.jsx] as App <<ReactComponent>> {
+    currentUrl
+    data
+    loading
+    error
+    handleSearch(url)
+    useEffect(currentUrl -> execute)
+  }
+
+  component [SearchBar.jsx] as SearchBar <<ReactComponent>> {
+    onSearch (callback)
+    inputUrl
+  }
+
+  component [DataDisplay.jsx] as DataDisplay <<ReactComponent>> {
+    data
+    loading
+    error
+    url
+    getResourceType(url)
+    renderItem(item, type)
+    filterData(data, searchTerm) <<if implemented>>
+  }
+
+  component [PostDataForm.jsx] as PostDataForm <<ReactComponent>> {
+    execute (from useApi)
+    formData
+    handleSubmit(formData -> execute)
+  }
+
+  component [useApi.js] as UseApi <<CustomHook>> {
+    data
+    loading
+    error
+    execute(url, method, body, headers)
+  }
+
+}
+
+component [jsonplaceholder.typicode.com] as ExternalAPI <<ExternalAPI>> {
+    note "Simulated REST API" as API_Note
+}
+
+
+' Relationships '
+
+App --> SearchBar : passes { onSearch }
+App --> DataDisplay : passes { data, loading, error, url }
+App --> PostDataForm : passes { execute }
+
+SearchBar ..> App : calls onSearch() to update currentUrl
+
+App ..> UseApi : uses the hook to manage fetch state & execute
+UseApi ..> ExternalAPI : makes HTTP requests (GET, POST, PUT, DELETE)
+
+PostDataForm ..> UseApi : calls execute() for POST requests
+
+
+legend right
+  **Legend:**
+  <<ReactComponent>>: A visual React component.
+  <<CustomHook>>: A reusable React hook containing logic.
+  <<ExternalAPI>>: An external service/API.
+
+  **Relationships:**
+  --o : Composition (A contains B)
+  --> : Dependency (A uses/relies on B)
+  ..> : Calls/Invokes (A calls a function on B)
+  <-- : Passes data/state
+end legend
+
+@enduml
